@@ -3,7 +3,7 @@ const A="#F59E0B",DARK="#0A0F1E",CARD="#111827",CARD2="#1A2235",BORDER="#2D3748"
 const PERSP=[{id:"fin",label:"Financiera",icon:"💰",color:GREEN},{id:"cli",label:"Clientes",icon:"👥",color:BLUE},{id:"pro",label:"Procesos Internos",icon:"⚙️",color:A},{id:"apr",label:"Crecimiento y Aprendizaje",icon:"🌱",color:PURPLE}];
 const FREQS=["Mensual","Bimensual","Trimestral","Cuatrimestral","Semestral","Anual"];
 const UNITS=["$","%","#","Días","Horas","Puntos","Ratio","Otro"];
-const KPI0=()=>({nombre:"",objetivo:"",perspectiva:"fin",responsable:"",frecuencia:"Mensual",unidad:"%",linea_base:"",meta:"",formula:"",polaridad:"up",peso:10,umbral_amarillo:"",umbral_rojo:"",periodos:[{label:"",valor:""}],notas:"",acciones:""});
+const KPI0=()=>({nombre:"",objetivo:"",perspectiva:"fin",responsable:"",frecuencia:"Mensual",unidad:"%",linea_base:"",meta:"",formula:"",polaridad:"up",peso:10,umbral_amarillo:"",umbral_rojo:"",periodos:[{label:"",valor:""}],notas:"",acciones:"",chart_type:"line"});
 
 // helpers
 const semCol=(v,m,r,a,pol)=>{if(!v||!m)return MUTED;const vn=+v,mn=+m,rn=+r,an=+a;if(pol==="up"){if(vn>=mn)return GREEN;if(rn&&vn<=rn)return RED;if(an&&vn<=an)return A;return GREEN;}else{if(vn<=mn)return GREEN;if(rn&&vn>=rn)return RED;if(an&&vn>=an)return A;return GREEN;}};
@@ -18,7 +18,7 @@ function TI({v,ch,ph,style={}}){const[f,sf]=useState(false);return <input type="
 function TA({v,ch,ph,rows=3}){const[f,sf]=useState(false);return <textarea rows={rows} value={v||""} onChange={e=>ch(e.target.value)} placeholder={ph} style={{width:"100%",background:"#0D1526",border:`1px solid ${f?A:BORDER}`,borderRadius:5,color:TEXT,padding:"8px 10px",fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"inherit",resize:"vertical",lineHeight:1.5,transition:"border-color 0.2s"}} onFocus={()=>sf(true)} onBlur={()=>sf(false)}/>;}
 function SEL({v,ch,opts}){return <select value={v||""} onChange={e=>ch(e.target.value)} style={{width:"100%",background:"#0D1526",border:`1px solid ${BORDER}`,borderRadius:5,color:TEXT,padding:"8px 8px",fontSize:12,outline:"none",cursor:"pointer",fontFamily:"inherit"}}>{opts.map(o=>typeof o==="string"?<option key={o}>{o}</option>:<option key={o.v} value={o.v}>{o.l}</option>)}</select>;}
 
-// Mini line chart
+// Line chart
 function MiniChart({periodos,color}){
   const pts=(periodos||[]).filter(p=>p.valor!=="").map(p=>+p.valor);
   if(pts.length<2)return <div style={{height:44,display:"flex",alignItems:"center",justifyContent:"center",color:MUTED,fontSize:10}}>Ingresa al menos 2 períodos</div>;
@@ -28,6 +28,45 @@ function MiniChart({periodos,color}){
     <polyline fill="none" stroke={color} strokeWidth="2" points={points} vectorEffect="non-scaling-stroke"/>
     {pts.map((v,i)=><circle key={i} cx={i*w} cy={h-((v-mn)/rng)*(h-8)-4} r="1.8" fill={color} vectorEffect="non-scaling-stroke"/>)}
   </svg>;
+}
+
+// Bar chart
+function BarChart({periodos,color}){
+  const pts=(periodos||[]).filter(p=>p.valor!=="");
+  if(!pts.length)return <div style={{height:60,display:"flex",alignItems:"center",justifyContent:"center",color:MUTED,fontSize:10}}>Sin datos</div>;
+  const max=Math.max(...pts.map(p=>+p.valor))||1;
+  const h=60;
+  return <div>
+    <div style={{display:"flex",alignItems:"flex-end",gap:4,height:h}}>
+      {pts.map((p,i)=><div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,height:"100%",justifyContent:"flex-end"}}>
+        <div style={{width:"100%",background:color,borderRadius:"3px 3px 0 0",height:`${(+p.valor/max)*(h-16)}px`,transition:"height 0.4s"}}/>
+      </div>)}
+    </div>
+    <div style={{display:"flex",gap:4,marginTop:4}}>
+      {pts.map((p,i)=><div key={i} style={{flex:1,fontSize:8,color:MUTED,textAlign:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.label||i+1}</div>)}
+    </div>
+  </div>;
+}
+
+// Donut chart
+function DonutChart({actual,meta,color}){
+  if(!actual||!meta)return <div style={{height:80,display:"flex",alignItems:"center",justifyContent:"center",color:MUTED,fontSize:10}}>Sin datos suficientes</div>;
+  const pct=Math.min(100,Math.round(+actual/+meta*100));
+  const r=28,cx=40,cy=40,circ=2*Math.PI*r;
+  const dash=circ*(pct/100);
+  return <div style={{display:"flex",alignItems:"center",gap:14}}>
+    <svg width="80" height="80" viewBox="0 0 80 80">
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e3a5f" strokeWidth="8"/>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="8"
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+        transform={`rotate(-90 ${cx} ${cy})`} style={{transition:"stroke-dasharray 0.5s"}}/>
+      <text x={cx} y={cy+1} textAnchor="middle" dominantBaseline="middle" fill={color} fontSize="12" fontWeight="bold">{pct}%</text>
+    </svg>
+    <div>
+      <div style={{fontSize:11,color:MUTED,marginBottom:3}}>Logrado vs Meta</div>
+      <div style={{fontSize:13,fontWeight:"bold",color:TEXT}}>{actual} / {meta}</div>
+    </div>
+  </div>;
 }
 
 // KPI Card (collapsible)
@@ -107,7 +146,17 @@ function KCard({kpi,idx,pc,upd,rem}){
           ))}
         </div>
         {(kpi.periodos||[]).some(p=>p.valor!=="")&&<>
-          <MiniChart periodos={kpi.periodos} color={col}/>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+            <LB t="Tipo de gráfico"/>
+            <div style={{display:"flex",gap:6}}>
+              {[{v:"line",l:"📈 Líneas"},{v:"bar",l:"📊 Barras"},{v:"donut",l:"🍩 Dona"}].map(ct=>(
+                <button key={ct.v} onClick={()=>u("chart_type",ct.v)} style={{background:kpi.chart_type===ct.v?A:CARD2,color:kpi.chart_type===ct.v?DARK:TEXT,border:`1px solid ${kpi.chart_type===ct.v?A:BORDER}`,borderRadius:20,padding:"4px 10px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>{ct.l}</button>
+              ))}
+            </div>
+          </div>
+          {kpi.chart_type==="bar"?<BarChart periodos={kpi.periodos} color={col}/>:
+           kpi.chart_type==="donut"?<DonutChart actual={actual} meta={kpi.meta} color={col}/>:
+           <MiniChart periodos={kpi.periodos} color={col}/>}
           <div style={{display:"flex",flexWrap:"wrap",gap:14,marginTop:6,fontSize:11}}>
             <span style={{color:MUTED}}>Tendencia: <strong style={{color:tr==="↑"?GREEN:tr==="↓"?RED:A}}>{tr}</strong></span>
             <span style={{color:MUTED}}>Brecha vs meta: <strong style={{color:col}}>{brecha} {kpi.unidad}</strong></span>
