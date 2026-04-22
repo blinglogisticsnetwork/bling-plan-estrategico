@@ -14,10 +14,15 @@ async function signIn(email,password){
 }
 async function loadData(token){
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/plan_data?key=eq.bling_v4`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${token}`}})
-    const rows=await r.json()
-    if(rows?.[0]?.value)return JSON.parse(rows[0].value)
-    return {}
+    // Load both plan data and BSC data
+    const [r1,r2]=await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/plan_data?key=eq.bling_v4`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${token}`}}),
+      fetch(`${SUPABASE_URL}/rest/v1/plan_data?key=eq.bling_bsc`,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${token}`}})
+    ])
+    const [rows1,rows2]=await Promise.all([r1.json(),r2.json()])
+    const planData=rows1?.[0]?.value?JSON.parse(rows1[0].value):{}
+    const bscData=rows2?.[0]?.value?JSON.parse(rows2[0].value):[]
+    return {...planData, __bsc_kpis: bscData}
   }catch{return{}}
 }
 
@@ -75,6 +80,7 @@ const MODULES=[
   {id:'pvs',label:'Propuestas Únicas de Venta',icon:'💎',color:A},
   {id:'mvp',label:'Camino a un MVP',icon:'🗺',color:GREEN},
   {id:'cliente',label:'Perfil del Cliente',icon:'👤',color:BLUE},
+  {id:'bsc',label:'Cuadro de Mando Integral',icon:'🎯',color:A},
 ]
 
 function val(data,key,def=''){return data?.[key]||def}
@@ -371,6 +377,76 @@ function ClienteView({data}){
   </div>
 }
 
+function BSCView({data}){
+  const kpis=data?.__bsc_kpis||[]
+  const PERSP=[{id:"fin",l:"💰 Financiera",c:GREEN},{id:"cli",l:"👥 Clientes",c:BLUE},{id:"pro",l:"⚙️ Procesos Internos",c:A},{id:"apr",l:"🌱 Crecimiento y Aprendizaje",c:PURPLE}]
+  const semCol=(k)=>{
+    const actual=(k.periodos||[]).filter(p=>p.valor!=="").slice(-1)[0]?.valor||""
+    if(!actual||!k.meta)return MUTED
+    const v=+actual,m=+k.meta,r=+k.umbral_rojo,a=+k.umbral_amarillo
+    if(k.polaridad==="up"){if(v>=m)return GREEN;if(r&&v<=r)return RED;if(a&&v<=a)return A;return GREEN}
+    else{if(v<=m)return GREEN;if(r&&v>=r)return RED;if(a&&v>=a)return A;return GREEN}
+  }
+  const semLbl=(c)=>c===GREEN?"🟢 En meta":c===A?"🟡 En riesgo":c===RED?"🔴 Crítico":"⚪ Sin datos"
+  const trend=(ps)=>{const vs=(ps||[]).filter(p=>p.valor!=="").map(p=>+p.valor);if(vs.length<2)return"→";return vs[vs.length-1]>vs[vs.length-2]?"↑":vs[vs.length-1]<vs[vs.length-2]?"↓":"→";}
+  if(!kpis.length)return <div style={{color:MUTED,fontSize:13,padding:20,textAlign:'center'}}>Sin KPIs ingresados en el CMI</div>
+
+  // Summary cards
+  const cnt=(c)=>kpis.filter(k=>semCol(k)===c).length
+
+  return <div>
+    {/* Global summary */}
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10,marginBottom:20}}>
+      {[{c:GREEN,l:"🟢 En Meta"},{c:A,l:"🟡 En Riesgo"},{c:RED,l:"🔴 Crítico"},{c:MUTED,l:"⚪ Sin datos"}].map(s=>(
+        <div key={s.c} style={{background:CARD2,border:`1px solid ${s.c}44`,borderRadius:8,padding:14,textAlign:'center'}}>
+          <div style={{fontSize:24,fontWeight:'bold',color:s.c}}>{cnt(s.c)}</div>
+          <div style={{fontSize:11,color:MUTED,marginTop:4}}>{s.l}</div>
+        </div>
+      ))}
+    </div>
+
+    {/* KPIs by perspective */}
+    {PERSP.map(p=>{
+      const ks=kpis.filter(k=>k.perspectiva===p.id)
+      if(!ks.length)return null
+      return <Block key={p.id} title={p.l} color={p.c}>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+            <thead><tr style={{background:'#0D1526'}}>
+              {['Est.','Indicador','Responsable','Frecuencia','Meta','Resultado','Tendencia','Brecha'].map(h=>(
+                <th key={h} style={{padding:'8px 10px',textAlign:'left',color:MUTED,fontSize:10,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>{ks.map((k,i)=>{
+              const col=semCol(k)
+              const actual=(k.periodos||[]).filter(p=>p.valor!=="").slice(-1)[0]?.valor||""
+              const brecha=actual&&k.meta?(+k.meta - +actual).toFixed(1):"—"
+              const tr=trend(k.periodos)
+              return <tr key={i} style={{borderBottom:`1px solid ${BORDER}`}}>
+                <td style={{padding:'8px 10px'}}><div style={{width:8,height:8,borderRadius:'50%',background:col}}/></td>
+                <td style={{padding:'8px 10px',color:TEXT,fontWeight:'bold'}}>{k.nombre||`KPI ${i+1}`}</td>
+                <td style={{padding:'8px 10px',color:MUTED}}>{k.responsable||"—"}</td>
+                <td style={{padding:'8px 10px',color:MUTED}}>{k.frecuencia||"—"}</td>
+                <td style={{padding:'8px 10px',color:p.c,fontWeight:'bold'}}>{k.meta||"—"} {k.unidad}</td>
+                <td style={{padding:'8px 10px',color:col,fontWeight:'bold'}}>{actual||"—"}{actual?` ${k.unidad}`:""}</td>
+                <td style={{padding:'8px 10px',fontSize:14,color:tr==="↑"?GREEN:tr==="↓"?RED:A}}>{tr}</td>
+                <td style={{padding:'8px 10px',color:col}}>{brecha}</td>
+              </tr>
+            })}</tbody>
+          </table>
+        </div>
+        {/* KPI details */}
+        {ks.map((k,i)=>(k.formula||k.notas||k.acciones)?<div key={i} style={{background:'#0D1526',borderRadius:6,padding:10,marginTop:8}}>
+          <div style={{fontSize:11,fontWeight:'bold',color:p.c,marginBottom:6}}>{k.nombre}</div>
+          {k.formula&&<div style={{fontSize:11,color:MUTED,marginBottom:4}}><span style={{color:A}}>Fórmula:</span> {k.formula}</div>}
+          {k.notas&&<div style={{fontSize:11,color:MUTED,marginBottom:4}}><span style={{color:A}}>Notas:</span> {k.notas}</div>}
+          {k.acciones&&<div style={{fontSize:11,color:MUTED}}><span style={{color:RED}}>Acciones correctivas:</span> {k.acciones}</div>}
+        </div>:null)}
+      </Block>
+    })}
+  </div>
+}
+
 // ── MAIN APP ──────────────────────────────────────────────
 const MODULE_VIEWS={
   contexto:ContextoView,
@@ -381,6 +457,7 @@ const MODULE_VIEWS={
   pvs:PVSView,
   mvp:MVPView,
   cliente:ClienteView,
+  bsc:BSCView,
 }
 
 function ReportApp(){
