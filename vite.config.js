@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      input: './index.html'
+      input: {
+        main: './index.html',
+        report: './report.html'
+      }
     }
   }
 })
