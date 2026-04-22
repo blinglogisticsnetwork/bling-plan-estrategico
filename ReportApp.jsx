@@ -549,8 +549,7 @@ function ReportApp(){
       `}</style>
       {/* Cover page */}
       <div style={{textAlign:'center',padding:'60px 40px',background:isExec?'#f8f9fa':CARD,marginBottom:40,borderRadius:isExec?0:12}}>
-        <div style={{width:64,height:64,background:A,borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'bold',color:DARK,fontSize:28,margin:'0 auto 20px'}}>B</div>
-        <h1 style={{fontSize:28,fontWeight:'bold',color:isExec?'#1a1a1a':A,marginBottom:8}}>Bling Logistics Network</h1>
+        <img src={LOGO_B64} alt="Bling" style={{width:200,margin:'0 auto 20px',display:'block'}}/>
         <h2 style={{fontSize:18,color:isExec?'#444':MUTED,fontWeight:'normal',marginBottom:4}}>Plan Estratégico 2026</h2>
         <p style={{color:isExec?'#888':MUTED,fontSize:12}}>{new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'})}</p>
       </div>
