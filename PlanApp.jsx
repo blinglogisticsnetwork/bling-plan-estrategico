@@ -1021,9 +1021,8 @@ export default function PlanApp(){
             <h2 style={{color:A,marginBottom:10,fontSize:22}}>Reportes y Documentos</h2>
             <p style={{color:MUTED,fontSize:14,marginBottom:28,maxWidth:400,margin:"0 auto 28px"}}>Genera reportes profesionales y exporta tu plan estratégico completo en PDF.</p>
             <div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}>
-              <a href="/report.html" target="_blank" style={{textDecoration:"none"}}>
-                <div style={{background:CARD2,border:`2px solid #ffffff`,borderRadius:12,padding:"20px 28px",cursor:"pointer",minWidth:180}}
-                  onMouseEnter={e=>e.currentTarget.style.borderColor=A} onMouseLeave={e=>e.currentTarget.style.borderColor="#ffffff"}>
+              <a href="#report" style={{textDecoration:"none"}}>
+                <div style={{background:CARD2,border:`2px solid ${A}`,borderRadius:12,padding:"20px 28px",cursor:"pointer",minWidth:180}}>
                   <div style={{fontSize:28,marginBottom:8}}>📋</div>
                   <div style={{fontSize:14,fontWeight:"bold",color:TEXT,marginBottom:4}}>Ver Reporte</div>
                   <div style={{fontSize:12,color:MUTED}}>Vista de lectura + exportar PDF</div>
