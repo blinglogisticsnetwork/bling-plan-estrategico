@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import PlanApp from './PlanApp.jsx'
 import BSCApp from './BSCApp.jsx'
+import ReportApp from './ReportApp.jsx'
 
 const SUPABASE_URL = 'https://bokqsvfhhvqbynktbwjq.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_mA2iDsEPngMk_oxfh7GeHg__aGCT9Zs'
@@ -92,9 +93,10 @@ function LoginScreen({ onLogin }) {
     <div style={{background:DARK, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Segoe UI', sans-serif"}}>
       <div style={{background:CARD, border:`1px solid ${BORDER}`, borderRadius:16, padding:40, width:'100%', maxWidth:400}}>
         <div style={{textAlign:'center', marginBottom:32}}>
-          <img src={LOGO_B64} alt="Bling" style={{width:160, margin:'0 auto 16px', display:'block'}}/>
-          <h2 style={{color:TEXT, margin:'0 0 6px', fontSize:22}}>Bling Logistics Network</h2>
-          <p style={{color:MUTED, margin:0, fontSize:13}}>Plan Estratégico 2026</p>
+          <div style={{width:64, height:64, background:A, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'bold', color:DARK, fontSize:28, margin:'0 auto 16px'}}>B</div>
+          <h2 style={{color:TEXT, margin:'0 0 4px', fontSize:22, fontWeight:'bold'}}>Bling</h2>
+          <p style={{color:A, margin:'0 0 4px', fontSize:13, fontWeight:'bold', letterSpacing:2, fontFamily:'monospace'}}>LOGISTICS NETWORK</p>
+          <p style={{color:MUTED, margin:0, fontSize:12}}>Plan Estratégico 2026</p>
         </div>
         <div>
           <label style={{display:'block', fontSize:11, color:MUTED, marginBottom:6, fontFamily:'monospace', letterSpacing:1}}>EMAIL</label>
@@ -117,10 +119,16 @@ function LoginScreen({ onLogin }) {
 function Router() {
   const [token, setToken] = useState(localStorage.getItem('bling_token'))
   const [user, setUser] = useState(localStorage.getItem('bling_user'))
-  const [page, setPage] = useState(window.location.hash === '#bsc' ? 'bsc' : 'plan')
+  const [page, setPage] = useState(
+    window.location.hash === '#bsc' ? 'bsc' : 
+    window.location.hash === '#report' ? 'report' : 'plan'
+  )
 
   useEffect(() => {
-    const onHash = () => setPage(window.location.hash === '#bsc' ? 'bsc' : 'plan')
+    const onHash = () => setPage(
+      window.location.hash === '#bsc' ? 'bsc' : 
+      window.location.hash === '#report' ? 'report' : 'plan'
+    )
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
@@ -145,7 +153,7 @@ function Router() {
   window.__logout = handleLogout
   window.__user = user
 
-  return page === 'bsc' ? <BSCApp /> : <PlanApp />
+  return page === 'bsc' ? <BSCApp /> : page === 'report' ? <ReportApp /> : <PlanApp />
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<Router />)
