@@ -929,6 +929,13 @@ export default function PlanApp(){
   const[saved,setSaved]=useState(false);
   const[loading,setLoading]=useState(true);
   const[menuOpen,setMenuOpen]=useState(false);
+  const[isMobile,setIsMobile]=useState(window.innerWidth<=768);
+
+  useEffect(()=>{
+    const onResize=()=>setIsMobile(window.innerWidth<=768);
+    window.addEventListener('resize',onResize);
+    return()=>window.removeEventListener('resize',onResize);
+  },[]);
 
   useEffect(()=>{(async()=>{try{const r=await window.storage.get("bling_v4");if(r?.value)setData(JSON.parse(r.value));}catch(_){}setLoading(false);})();},[]);
 
@@ -939,33 +946,80 @@ export default function PlanApp(){
 
   const prog=totalPct(data);
   const wide=active==="gtm"||active==="finanzas";
-
   const navTo=(id)=>{setActive(id);setMenuOpen(false);};
 
   return <div style={{background:DARK,minHeight:"100vh",display:"flex",flexDirection:"column",fontFamily:"'Segoe UI',sans-serif",color:TEXT}}>
-    <style>{`
-      @media(max-width:768px){
-        .sidebar{display:none!important;}
-        .sidebar.open{display:block!important;position:fixed;top:0;left:0;width:80vw;max-width:280px;height:100vh;z-index:100;overflow-y:auto;}
-        .topbar-title{display:none!important;}
-        .topbar-progress{display:none!important;}
-        .topbar-user{display:none!important;}
-        .main-pad{padding:16px 14px!important;}
-        .hamburger{display:flex!important;}
-        .overlay{display:block!important;}
-      }
-      @media(min-width:769px){
-        .hamburger{display:none!important;}
-        .overlay{display:none!important;}
-      }
-    `}</style>
 
     {/* TOPBAR */}
     <div style={{background:CARD,borderBottom:`1px solid ${BORDER}`,padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,zIndex:99,position:"relative"}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <button className="hamburger" onClick={()=>setMenuOpen(!menuOpen)} style={{background:"transparent",border:`1px solid ${BORDER}`,color:TEXT,borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:18,lineHeight:1,display:"none"}}>☰</button>
-        <img src={LOGO_B64} alt="Bling" style={{height:26}}/>
-        <div className="topbar-title"><div style={{fontSize:13,fontWeight:"bold"}}>Bling Logistics Network</div><div style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>PLAN ESTRATÉGICO 2026</div></div>
+        {isMobile&&<button onClick={()=>setMenuOpen(!menuOpen)} style={{background:"transparent",border:`1px solid ${BORDER}`,color:TEXT,borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:18,lineHeight:1,marginRight:4}}>☰</button>}
+        <div style={{width:28,height:28,background:A,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:"bold",color:DARK,fontSize:15,flexShrink:0}}>B</div>
+        {!isMobile&&<div><div style={{fontSize:13,fontWeight:"bold",color:TEXT}}>Bling Logistics Network</div><div style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>PLAN ESTRATÉGICO 2026</div></div>}
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        {!isMobile&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{width:80,height:5,background:"#1e3a5f",borderRadius:3}}><div style={{width:`${prog}%`,height:"100%",background:prog===100?GREEN:A,borderRadius:3,transition:"width 0.4s"}}/></div>
+          <span style={{fontSize:12,color:A,fontFamily:"monospace"}}>{prog}%</span>
+        </div>}
+        {isMobile&&<span style={{fontSize:12,color:A,fontFamily:"monospace",fontWeight:"bold"}}>{prog}%</span>}
+        <button onClick={handleSave} style={{background:saved?GREEN:A,color:DARK,border:"none",borderRadius:6,padding:"7px 12px",fontWeight:"bold",cursor:"pointer",fontSize:12,fontFamily:"monospace",transition:"background 0.3s",whiteSpace:"nowrap"}}>
+          {saved?"✓":isMobile?"💾":"💾 GUARDAR"}
+        </button>
+        {!isMobile&&window.__user&&<span style={{fontSize:11,color:MUTED,fontFamily:"monospace"}}>{window.__user}</span>}
+        <button onClick={()=>window.__logout&&window.__logout()} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"7px 10px",cursor:"pointer",fontSize:11,fontFamily:"monospace"}}
+          onMouseEnter={e=>{e.target.style.borderColor="#EF4444";e.target.style.color="#EF4444"}} onMouseLeave={e=>{e.target.style.borderColor=BORDER;e.target.style.color=MUTED}}>
+          Salir
+        </button>
+      </div>
+    </div>
+
+    {/* OVERLAY mobile */}
+    {isMobile&&menuOpen&&<div onClick={()=>setMenuOpen(false)} style={{position:"fixed",top:0,left:0,width:"100vw",height:"100vh",background:"rgba(0,0,0,0.6)",zIndex:99}}/>}
+
+    <div style={{display:"flex",flex:1,overflow:"hidden"}}>
+      {/* SIDEBAR */}
+      {(!isMobile||menuOpen)&&<div style={{
+        width:isMobile?Math.min(280,window.innerWidth*0.8):210,
+        background:"#0D1526",borderRight:`1px solid ${BORDER}`,overflowY:"auto",flexShrink:0,padding:"8px 0",
+        ...(isMobile?{position:"fixed",top:0,left:0,height:"100vh",zIndex:100,boxShadow:"4px 0 20px rgba(0,0,0,0.5)"}:{})
+      }}>
+        {isMobile&&<div style={{padding:"16px 14px",borderBottom:`1px solid ${BORDER}`,marginBottom:8,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:24,height:24,background:A,borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:"bold",color:DARK,fontSize:13}}>B</div>
+            <span style={{fontSize:13,fontWeight:"bold",color:TEXT}}>Bling Logistics</span>
+          </div>
+          <button onClick={()=>setMenuOpen(false)} style={{background:"transparent",border:"none",color:MUTED,cursor:"pointer",fontSize:20}}>✕</button>
+        </div>}
+        {NAV.map(sec=><div key={sec.sec} style={{marginBottom:4}}>
+          <div style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1.5,padding:"10px 14px 5px",textTransform:"uppercase"}}>{sec.sec}</div>
+          {sec.items.map(item=>{const on=active===item.id;return(
+            <div key={item.id} onClick={()=>!item.dis&&navTo(item.id)} style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:8,cursor:item.dis?"default":"pointer",background:on?`${A}15`:"transparent",borderLeft:on?`3px solid ${A}`:"3px solid transparent",opacity:item.dis?0.3:1,transition:"all 0.15s"}}>
+              <span style={{fontSize:15}}>{item.ic}</span>
+              <span style={{fontSize:13,color:on?A:TEXT}}>{item.label}</span>
+            </div>
+          );})}
+        </div>)}
+      </div>}
+
+      {/* MAIN */}
+      <div style={{flex:1,overflowY:"auto",padding:isMobile?"16px 14px":"24px 30px"}}>
+        <div style={{maxWidth:wide?1060:840}}>
+          {active==="dashboard"&&<Dashboard data={data} go={navTo}/>}
+          {active==="contexto"&&<Contexto data={data} set={handleChange}/>}
+          {active==="marcos"&&<Marcos data={data} set={handleChange}/>}
+          {active==="finanzas"&&<Finanzas data={data} set={handleChange}/>}
+          {active==="gtm"&&<GTM data={data} set={handleChange}/>}
+          {active==="competitivo"&&<Competitivo data={data} set={handleChange}/>}
+          {active==="pvs"&&<PVS data={data} set={handleChange}/>}
+          {active==="mvp"&&<MVP data={data} set={handleChange}/>}
+          {active==="cliente"&&<Cliente data={data} set={handleChange}/>}
+          {active==="bsc"&&<BSC/>}
+        </div>
+      </div>
+    </div>
+  </div>;
+}
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div className="topbar-progress" style={{display:"flex",alignItems:"center",gap:6}}>
