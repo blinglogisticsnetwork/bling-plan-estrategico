@@ -138,6 +138,7 @@ function KCard({kpi,idx,pc,upd,rem}){
             const pCol=semCol(p.valor,kpi.meta,kpi.umbral_rojo,kpi.umbral_amarillo,kpi.polaridad);
             const pPct=p.valor&&kpi.meta?Math.round(+p.valor/+kpi.meta*100):null;
             const pEmoji=pCol===GREEN?"🟢":pCol===A?"🟡":pCol===RED?"🔴":"⚪";
+            const pLabel=pPct!==null?(pPct===100?"✓ Meta":pPct>100?`+${pPct-100}%`:`${pPct}%`):null;
             return <div key={pi} style={{display:"flex",flexDirection:"column",gap:3,minWidth:72,alignItems:"center",background:`${pCol}11`,borderRadius:8,padding:"6px 4px",border:`1px solid ${p.valor?pCol+"44":BORDER}`}}>
               <input type="text" value={p.label} onChange={e=>updPer(pi,"label",e.target.value)} placeholder="Período"
                 style={{background:"transparent",border:"none",borderBottom:`1px solid ${BORDER}`,color:MUTED,padding:"2px 4px",fontSize:10,outline:"none",textAlign:"center",width:"100%",boxSizing:"border-box",fontFamily:"inherit"}}/>
@@ -145,7 +146,7 @@ function KCard({kpi,idx,pc,upd,rem}){
                 style={{background:"transparent",border:"none",color:TEXT,padding:"4px 4px",fontSize:13,outline:"none",textAlign:"center",width:"100%",boxSizing:"border-box",fontFamily:"inherit",fontWeight:"bold"}}/>
               {p.valor&&<>
                 <span style={{fontSize:14}}>{pEmoji}</span>
-                {pPct!==null&&<span style={{fontSize:9,color:pCol,fontWeight:"bold"}}>{pPct}%</span>}
+                {pLabel!==null&&<span style={{fontSize:9,color:pCol,fontWeight:"bold"}}>{pLabel}</span>}
               </>}
               {(kpi.periodos||[]).length>1&&<button onClick={()=>remPer(pi)} style={{background:"transparent",border:"none",color:MUTED,cursor:"pointer",fontSize:9,padding:0}}
                 onMouseEnter={e=>e.target.style.color=RED} onMouseLeave={e=>e.target.style.color=MUTED}>✕</button>}
