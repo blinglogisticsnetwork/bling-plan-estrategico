@@ -156,7 +156,6 @@ export default function BSCApp(){
         </div>
         <button onClick={()=>window.location.hash=""} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"6px 12px",cursor:"pointer",fontSize:11,fontFamily:"monospace"}}
           onMouseEnter={e=>e.target.style.color=A} onMouseLeave={e=>e.target.style.color=MUTED}>← Plan Estratégico</button>
-        </div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{display:"flex",gap:8}}>
