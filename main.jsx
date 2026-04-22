@@ -93,9 +93,7 @@ function LoginScreen({ onLogin }) {
     <div style={{background:DARK, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Segoe UI', sans-serif"}}>
       <div style={{background:CARD, border:`1px solid ${BORDER}`, borderRadius:16, padding:40, width:'100%', maxWidth:400}}>
         <div style={{textAlign:'center', marginBottom:32}}>
-          <div style={{width:64, height:64, background:A, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'bold', color:DARK, fontSize:28, margin:'0 auto 16px'}}>B</div>
-          <h2 style={{color:TEXT, margin:'0 0 4px', fontSize:22, fontWeight:'bold'}}>Bling</h2>
-          <p style={{color:A, margin:'0 0 4px', fontSize:13, fontWeight:'bold', letterSpacing:2, fontFamily:'monospace'}}>LOGISTICS NETWORK</p>
+          <img src={LOGO_B64} alt="Bling" style={{width:160, margin:'0 auto 16px', display:'block'}}/>
           <p style={{color:MUTED, margin:0, fontSize:12}}>Plan Estratégico 2026</p>
         </div>
         <div>
