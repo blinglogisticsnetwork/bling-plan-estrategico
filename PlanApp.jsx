@@ -118,8 +118,6 @@ function compPct(d){
 function totalPct(d){const s=[ctxPct(d),...MARCOS_TABS.map(t=>mrkPct(t.id,d)),finPct(d),gtmPct(d),compPct(d),pvsPct(d),mvpPct(d),clientePct(d),bscPct(d)];return Math.round(s.reduce((a,b)=>a+b,0)/s.length);}
 
 // ── DASHBOARD ─────────────────────────────────────────────
-import {Dashboard,Contexto,Marcos,Finanzas,GTM} from './PlanCore.jsx'
-import {Competitivo,PVS,MVP,Cliente,BSC} from './PlanExtra.jsx'
 export default function PlanApp(){
   const[active,setActive]=useState("dashboard");
   const[data,setData]=useState({});
