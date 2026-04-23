@@ -928,9 +928,11 @@ export default function PlanApp(){
   const[active,setActive]=useState("dashboard");
   const[data,setData]=useState({});
   const[saved,setSaved]=useState(false);
+  const[autoSaving,setAutoSaving]=useState(false);
   const[loading,setLoading]=useState(true);
   const[menuOpen,setMenuOpen]=useState(false);
   const[isMobile,setIsMobile]=useState(window.innerWidth<=768);
+  const autoSaveTimer=React.useRef(null);
 
   useEffect(()=>{
     const onResize=()=>setIsMobile(window.innerWidth<=768);
@@ -940,8 +942,27 @@ export default function PlanApp(){
 
   useEffect(()=>{(async()=>{try{const r=await window.storage.get("bling_v4");if(r?.value)setData(JSON.parse(r.value));}catch(_){}setLoading(false);})();},[]);
 
-  const handleChange=(k,v)=>setData(p=>({...p,[k]:v}));
-  const handleSave=async()=>{try{await window.storage.set("bling_v4",JSON.stringify(data));setSaved(true);setTimeout(()=>setSaved(false),2500);}catch(_){}};
+  const handleChange=(k,v)=>{
+    setData(p=>{
+      const newData={...p,[k]:v};
+      // Autosave after 2 seconds of inactivity
+      if(autoSaveTimer.current)clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current=setTimeout(async()=>{
+        try{
+          setAutoSaving(true);
+          await window.storage.set("bling_v4",JSON.stringify(newData));
+          setAutoSaving(false);
+          setSaved(true);
+          setTimeout(()=>setSaved(false),2000);
+        }catch(_){setAutoSaving(false);}
+      },2000);
+      return newData;
+    });
+  };
+  const handleSave=async()=>{
+    if(autoSaveTimer.current)clearTimeout(autoSaveTimer.current);
+    try{await window.storage.set("bling_v4",JSON.stringify(data));setSaved(true);setTimeout(()=>setSaved(false),2500);}catch(_){}
+  };
 
   if(loading)return <div style={{background:DARK,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:A,fontFamily:"monospace"}}>Cargando...</div>;
 
@@ -964,8 +985,9 @@ export default function PlanApp(){
           <span style={{fontSize:12,color:A,fontFamily:"monospace"}}>{prog}%</span>
         </div>}
         {isMobile&&<span style={{fontSize:12,color:A,fontFamily:"monospace",fontWeight:"bold"}}>{prog}%</span>}
+        {autoSaving&&!isMobile&&<span style={{fontSize:10,color:MUTED,fontFamily:"monospace",animation:"pulse 1s infinite"}}>💾 guardando...</span>}
         <button onClick={handleSave} style={{background:saved?GREEN:A,color:DARK,border:"none",borderRadius:6,padding:"7px 12px",fontWeight:"bold",cursor:"pointer",fontSize:12,fontFamily:"monospace",transition:"background 0.3s",whiteSpace:"nowrap"}}>
-          {saved?"✓":isMobile?"💾":"💾 GUARDAR"}
+          {saved?"✓ GUARDADO":isMobile?"💾":"💾 GUARDAR"}
         </button>
         {!isMobile&&window.__user&&<span style={{fontSize:11,color:MUTED,fontFamily:"monospace"}}>{window.__user}</span>}
         <button onClick={()=>window.__logout&&window.__logout()} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"7px 10px",cursor:"pointer",fontSize:11,fontFamily:"monospace"}}
