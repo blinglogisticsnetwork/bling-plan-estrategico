@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 const A="#F59E0B",DARK="#0A0F1E",CARD="#111827",CARD2="#1A2235",BORDER="#2D3748",TEXT="#E2E8F0",MUTED="#64748B",GREEN="#10B981",BLUE="#3B82F6",RED="#EF4444",PURPLE="#A855F7";
 const PERSP=[{id:"fin",label:"Financiera",icon:"💰",color:GREEN},{id:"cli",label:"Clientes",icon:"👥",color:BLUE},{id:"pro",label:"Procesos Internos",icon:"⚙️",color:A},{id:"apr",label:"Crecimiento y Aprendizaje",icon:"🌱",color:PURPLE}];
-const FREQS=["Mensual","Bimensual","Trimestral","Cuatrimestral","Semestral","Anual"];
+const FREQS=["Diario","Semanal","Quincenal","Mensual","Bimensual","Trimestral","Cuatrimestral","Semestral","Anual"];
 const UNITS=["$","%","#","Días","Horas","Puntos","Ratio","Otro"];
 const KPI0=()=>({nombre:"",objetivo:"",perspectiva:"fin",responsable:"",frecuencia:"Mensual",unidad:"%",linea_base:"",meta:"",formula:"",polaridad:"up",peso:10,umbral_amarillo:"",umbral_rojo:"",periodos:[{label:"",valor:""}],notas:"",acciones:"",chart_type:"line"});
 
