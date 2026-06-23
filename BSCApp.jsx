@@ -294,13 +294,22 @@ export default function BSCApp(){
       {tab==="dash"&&<div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:16}}>
           <h2 style={{color:A,margin:0,fontSize:20}}>Dashboard BSC</h2>
-          {allPeriods.length>0&&<div style={{display:"flex",alignItems:"center",gap:8}}>
+          {allPeriods.length>0&&<div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
             <span style={{fontSize:11,color:MUTED,fontFamily:"monospace"}}>📅 VER PERÍODO:</span>
-            <select value={filterPeriod} onChange={e=>setFilterPeriod(e.target.value)}
-              style={{background:CARD2,border:`1px solid ${A}`,borderRadius:6,color:A,padding:"7px 12px",fontSize:12,outline:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:"bold"}}>
-              <option value="__latest__">🔄 Más reciente (auto)</option>
-              {allPeriods.map(p=><option key={p} value={p}>{p}</option>)}
-            </select>
+            <input
+              list="periodos-list"
+              value={filterPeriod==="__latest__"?"":filterPeriod}
+              onChange={e=>{
+                const v=e.target.value;
+                if(v===""||v==="__latest__")setFilterPeriod("__latest__");
+                else if(allPeriods.includes(v))setFilterPeriod(v);
+              }}
+              placeholder="🔄 Más reciente (auto) — escribe para buscar..."
+              style={{background:CARD2,border:`1px solid ${A}`,borderRadius:6,color:A,padding:"7px 12px",fontSize:12,outline:"none",fontFamily:"inherit",fontWeight:"bold",minWidth:240}}
+            />
+            <datalist id="periodos-list">
+              {allPeriods.map(p=><option key={p} value={p}/>)}
+            </datalist>
             {filterPeriod!=="__latest__"&&<button onClick={()=>setFilterPeriod("__latest__")} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>✕ Quitar filtro</button>}
           </div>}
         </div>
