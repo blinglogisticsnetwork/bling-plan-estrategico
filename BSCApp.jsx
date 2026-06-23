@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 const A="#F59E0B",DARK="#0A0F1E",CARD="#111827",CARD2="#1A2235",BORDER="#2D3748",TEXT="#E2E8F0",MUTED="#64748B",GREEN="#10B981",BLUE="#3B82F6",RED="#EF4444",PURPLE="#A855F7";
 const PERSP=[{id:"fin",label:"Financiera",icon:"💰",color:GREEN},{id:"cli",label:"Clientes",icon:"👥",color:BLUE},{id:"pro",label:"Procesos Internos",icon:"⚙️",color:A},{id:"apr",label:"Crecimiento y Aprendizaje",icon:"🌱",color:PURPLE}];
-const FREQS=["Diario","Semanal","Quincenal","Mensual","Bimensual","Trimestral","Cuatrimestral","Semestral","Anual"];
+const FREQS=["Mensual","Bimensual","Trimestral","Cuatrimestral","Semestral","Anual"];
 const UNITS=["$","%","#","Días","Horas","Puntos","Ratio","Otro"];
 const KPI0=()=>({nombre:"",objetivo:"",perspectiva:"fin",responsable:"",frecuencia:"Mensual",unidad:"%",linea_base:"",meta:"",formula:"",polaridad:"up",peso:10,umbral_amarillo:"",umbral_rojo:"",periodos:[{label:"",valor:""}],notas:"",acciones:"",chart_type:"line"});
 
@@ -72,8 +72,12 @@ function DonutChart({actual,meta,color}){
 // KPI Card (collapsible)
 function KCard({kpi,idx,pc,upd,rem}){
   const[open,setOpen]=useState(false);
+  const[showHist,setShowHist]=useState(false);
   const u=(k,v)=>upd({...kpi,[k]:v});
-  const actual=(kpi.periodos||[]).filter(p=>p.valor!=="").slice(-1)[0]?.valor||"";
+  const periodosConValor=(kpi.periodos||[]).filter(p=>p.valor!=="");
+  const actualPeriodo=periodosConValor.slice(-1)[0];
+  const actual=actualPeriodo?.valor||"";
+  const actualLabel=actualPeriodo?.label||"";
   const col=kpiCol(kpi);
   const tr=trend(kpi.periodos);
   const brecha=actual&&kpi.meta?(+kpi.meta - +actual).toFixed(2):"—";
@@ -91,6 +95,7 @@ function KCard({kpi,idx,pc,upd,rem}){
       </div>
       {actual&&<div style={{textAlign:"right",flexShrink:0,marginRight:8}}>
         <div style={{fontSize:16,fontWeight:"bold",color:col}}>{actual}{kpi.unidad==="%" ?"%":kpi.unidad==="$"?"":""}</div>
+        <div style={{fontSize:9,color:A,fontWeight:"bold"}}>{actualLabel?`📅 ${actualLabel}`:"Último período"}</div>
         <div style={{fontSize:10,color:MUTED}}>Meta:{kpi.meta} Tend:<span style={{color:tr==="↑"?GREEN:tr==="↓"?RED:A}}>{tr}</span></div>
       </div>}
       <span style={{color:MUTED,fontSize:11}}>{open?"▲":"▼"}</span>
@@ -133,13 +138,15 @@ function KCard({kpi,idx,pc,upd,rem}){
           <LB t="Resultados por Período"/>
           <button onClick={addPer} style={{background:"transparent",border:`1px dashed ${A}`,color:A,borderRadius:4,padding:"3px 8px",cursor:"pointer",fontSize:10,fontFamily:"inherit"}}>+ Período</button>
         </div>
+        {actualLabel&&<div style={{fontSize:11,color:A,marginBottom:8,fontWeight:"bold"}}>📅 Resultado más reciente: <span style={{color:TEXT}}>{actualLabel}</span> = <span style={{color:col}}>{actual} {kpi.unidad}</span></div>}
         <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
           {(kpi.periodos||[]).map((p,pi)=>{
             const pCol=semCol(p.valor,kpi.meta,kpi.umbral_rojo,kpi.umbral_amarillo,kpi.polaridad);
             const pPct=p.valor&&kpi.meta?Math.round(+p.valor/+kpi.meta*100):null;
             const pEmoji=pCol===GREEN?"🟢":pCol===A?"🟡":pCol===RED?"🔴":"⚪";
             const pLabel=pPct!==null?(pPct===100?"✓ Meta":pPct>100?`+${pPct-100}%`:`${pPct}%`):null;
-            return <div key={pi} style={{display:"flex",flexDirection:"column",gap:3,minWidth:72,alignItems:"center",background:`${pCol}11`,borderRadius:8,padding:"6px 4px",border:`1px solid ${p.valor?pCol+"44":BORDER}`}}>
+            const isLast=pi===(kpi.periodos||[]).length-1&&p.valor!=="";
+            return <div key={pi} style={{display:"flex",flexDirection:"column",gap:3,minWidth:72,alignItems:"center",background:`${pCol}11`,borderRadius:8,padding:"6px 4px",border:`${isLast?"2px":"1px"} solid ${p.valor?pCol+(isLast?"":"44"):BORDER}`}}>
               <input type="text" value={p.label} onChange={e=>updPer(pi,"label",e.target.value)} placeholder="Período"
                 style={{background:"transparent",border:"none",borderBottom:`1px solid ${BORDER}`,color:MUTED,padding:"2px 4px",fontSize:10,outline:"none",textAlign:"center",width:"100%",boxSizing:"border-box",fontFamily:"inherit"}}/>
               <input type="number" value={p.valor} onChange={e=>updPer(pi,"valor",e.target.value)} placeholder="0"
@@ -170,6 +177,36 @@ function KCard({kpi,idx,pc,upd,rem}){
             <span style={{color:MUTED}}>Brecha vs meta: <strong style={{color:col}}>{brecha} {kpi.unidad}</strong></span>
             <span style={{color:MUTED}}>Estado: <strong style={{color:col}}>{semLbl(col)}</strong></span>
           </div>
+
+          {/* Tabla histórica colapsable */}
+          {periodosConValor.length>1&&<div style={{marginTop:12}}>
+            <button onClick={()=>setShowHist(!showHist)} style={{background:"transparent",border:`1px solid ${BORDER}`,color:TEXT,borderRadius:6,padding:"6px 12px",cursor:"pointer",fontSize:11,fontFamily:"inherit",width:"100%",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span>📊 Ver historial completo ({periodosConValor.length} períodos)</span>
+              <span>{showHist?"▲":"▼"}</span>
+            </button>
+            {showHist&&<div style={{marginTop:8,maxHeight:280,overflowY:"auto",border:`1px solid ${BORDER}`,borderRadius:6}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                <thead><tr style={{background:CARD2,position:"sticky",top:0}}>
+                  {["Período","Resultado","Meta","Estado","Variación"].map(h=>(
+                    <th key={h} style={{padding:"6px 8px",textAlign:"left",color:MUTED,fontSize:9,fontFamily:"monospace",borderBottom:`1px solid ${BORDER}`}}>{h}</th>
+                  ))}
+                </tr></thead>
+                <tbody>{periodosConValor.map((p,i)=>{
+                  const pc=semCol(p.valor,kpi.meta,kpi.umbral_rojo,kpi.umbral_amarillo,kpi.polaridad);
+                  const prev=periodosConValor[i-1];
+                  const varPct=prev&&prev.valor?(((+p.valor-+prev.valor)/+prev.valor)*100).toFixed(1):null;
+                  const isLastRow=i===periodosConValor.length-1;
+                  return <tr key={i} style={{background:isLastRow?`${A}11`:"transparent",borderBottom:`1px solid ${BORDER}`}}>
+                    <td style={{padding:"6px 8px",color:TEXT,fontWeight:isLastRow?"bold":"normal"}}>{p.label||`#${i+1}`}{isLastRow&&<span style={{color:A,marginLeft:4}}>●</span>}</td>
+                    <td style={{padding:"6px 8px",color:pc,fontWeight:"bold"}}>{p.valor} {kpi.unidad}</td>
+                    <td style={{padding:"6px 8px",color:MUTED}}>{kpi.meta||"—"}</td>
+                    <td style={{padding:"6px 8px"}}>{pc===GREEN?"🟢":pc===A?"🟡":pc===RED?"🔴":"⚪"}</td>
+                    <td style={{padding:"6px 8px",color:varPct===null?MUTED:(+varPct>=0?GREEN:RED),fontWeight:"bold"}}>{varPct===null?"—":`${varPct>0?"+":""}${varPct}%`}</td>
+                  </tr>;
+                })}</tbody>
+              </table>
+            </div>}
+          </div>}
         </>}
       </div>
 
