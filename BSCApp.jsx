@@ -342,7 +342,7 @@ export default function BSCApp(){
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
               <thead><tr style={{background:"#0D1526"}}>
-                {["Est.","Indicador","Perspectiva","Responsable","Frec.","Meta","Resultado","Brecha","Tend."].map(h=><th key={h} style={{padding:"8px 10px",textAlign:"left",color:MUTED,fontFamily:"monospace",fontSize:9,borderBottom:`1px solid ${BORDER}`,whiteSpace:"nowrap"}}>{h}</th>)}
+                {["Est.","Indicador","Perspectiva","Responsable","Frec.","Período","Meta","Resultado","Brecha","Tend."].map(h=><th key={h} style={{padding:"8px 10px",textAlign:"left",color:MUTED,fontFamily:"monospace",fontSize:9,borderBottom:`1px solid ${BORDER}`,whiteSpace:"nowrap"}}>{h}</th>)}
               </tr></thead>
               <tbody>{kpis.map((k,i)=>{
                 const col=kpiColAt(k,filterPeriod);
@@ -357,6 +357,7 @@ export default function BSCApp(){
                   <td style={{padding:"8px 10px",color:p?.color||MUTED}}>{p?.label||"—"}</td>
                   <td style={{padding:"8px 10px",color:MUTED}}>{k.responsable||"—"}</td>
                   <td style={{padding:"8px 10px",color:MUTED}}>{k.frecuencia}</td>
+                  <td style={{padding:"8px 10px",color:periodoVal?.label?A:MUTED,fontWeight:periodoVal?.label?"bold":"normal"}}>{periodoVal?.label||"—"}</td>
                   <td style={{padding:"8px 10px",color:A,fontWeight:"bold"}}>{k.meta||"—"} {k.unidad}</td>
                   <td style={{padding:"8px 10px",color:act?col:MUTED,fontWeight:"bold"}}>{act||"Sin dato"}{act?` ${k.unidad}`:""}</td>
                   <td style={{padding:"8px 10px",color:col}}>{act?br:"—"}</td>
