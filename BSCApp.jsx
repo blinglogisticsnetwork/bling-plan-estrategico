@@ -11,6 +11,27 @@ const semLbl=(c)=>c===GREEN?"🟢 En meta":c===A?"🟡 En riesgo":c===RED?"🔴 
 const trend=(ps)=>{const vs=(ps||[]).filter(p=>p.valor!=="").map(p=>+p.valor);if(vs.length<2)return"→";return vs[vs.length-1]>vs[vs.length-2]?"↑":vs[vs.length-1]<vs[vs.length-2]?"↓":"→";};
 const kpiCol=(k)=>{const a=(k.periodos||[]).filter(p=>p.valor!=="").slice(-1)[0]?.valor||"";return semCol(a,k.meta,k.umbral_rojo,k.umbral_amarillo,k.polaridad);};
 
+// Filtro de período global
+const getAllPeriods=(kpis)=>{
+  const order=[];
+  const seen=new Set();
+  kpis.forEach(k=>(k.periodos||[]).forEach(p=>{if(p.label&&p.label.trim()&&!seen.has(p.label)){seen.add(p.label);order.push(p.label);}}));
+  return order;
+};
+const findPeriod=(kpi,label)=>(kpi.periodos||[]).find(p=>p.label===label);
+const kpiValAt=(kpi,filterPeriod)=>{
+  if(filterPeriod==="__latest__"){
+    const ps=(kpi.periodos||[]).filter(p=>p.valor!=="");
+    return ps.slice(-1)[0]||null;
+  }
+  return findPeriod(kpi,filterPeriod)||null;
+};
+const kpiColAt=(kpi,filterPeriod)=>{
+  const p=kpiValAt(kpi,filterPeriod);
+  if(!p||p.valor==="")return MUTED;
+  return semCol(p.valor,kpi.meta,kpi.umbral_rojo,kpi.umbral_amarillo,kpi.polaridad);
+};
+
 // UI atoms
 function Bar({pct,color=A,h=5}){return <div style={{width:"100%",height:h,background:"#1e3a5f",borderRadius:3}}><div style={{width:`${pct}%`,height:"100%",background:pct===100?GREEN:color,borderRadius:3,transition:"width 0.4s"}}/></div>;}
 function LB({t}){return <div style={{fontSize:10,color:MUTED,marginBottom:4,fontFamily:"monospace",letterSpacing:1}}>{t.toUpperCase()}</div>;}
@@ -225,6 +246,7 @@ export default function BSCApp(){
   const[kpis,setKpis]=useState([]);
   const[saved,setSaved]=useState(false);
   const[loading,setLoading]=useState(true);
+  const[filterPeriod,setFilterPeriod]=useState("__latest__");
 
   useEffect(()=>{(async()=>{try{const r=await window.storage.get("bling_bsc");if(r?.value)setKpis(JSON.parse(r.value));}catch(_){}setLoading(false);})();},[]);
   const save=async()=>{try{await window.storage.set("bling_bsc",JSON.stringify(kpis));setSaved(true);setTimeout(()=>setSaved(false),2500);}catch(_){}};
@@ -232,8 +254,9 @@ export default function BSCApp(){
   const remKpi=(i)=>setKpis(kpis.filter((_,j)=>j!==i));
   const updKpi=(i,v)=>setKpis(kpis.map((k,j)=>j===i?v:k));
   const byP=(pid)=>kpis.filter(k=>k.perspectiva===pid);
-  const pctOk=(pid)=>{const ks=byP(pid);return ks.length?Math.round(ks.filter(k=>kpiCol(k)===GREEN).length/ks.length*100):0;};
-  const cnt=(c)=>kpis.filter(k=>kpiCol(k)===c).length;
+  const allPeriods=getAllPeriods(kpis);
+  const pctOk=(pid)=>{const ks=byP(pid);const conDatos=ks.filter(k=>kpiValAt(k,filterPeriod));return conDatos.length?Math.round(conDatos.filter(k=>kpiColAt(k,filterPeriod)===GREEN).length/conDatos.length*100):0;};
+  const cnt=(c)=>kpis.filter(k=>kpiColAt(k,filterPeriod)===c).length;
 
   if(loading)return <div style={{background:DARK,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:A,fontFamily:"monospace"}}>Cargando BSC...</div>;
 
@@ -269,7 +292,21 @@ export default function BSCApp(){
 
       {/* DASHBOARD */}
       {tab==="dash"&&<div>
-        <h2 style={{color:A,marginTop:0,fontSize:20,marginBottom:16}}>Dashboard BSC</h2>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10,marginBottom:16}}>
+          <h2 style={{color:A,margin:0,fontSize:20}}>Dashboard BSC</h2>
+          {allPeriods.length>0&&<div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:11,color:MUTED,fontFamily:"monospace"}}>📅 VER PERÍODO:</span>
+            <select value={filterPeriod} onChange={e=>setFilterPeriod(e.target.value)}
+              style={{background:CARD2,border:`1px solid ${A}`,borderRadius:6,color:A,padding:"7px 12px",fontSize:12,outline:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:"bold"}}>
+              <option value="__latest__">🔄 Más reciente (auto)</option>
+              {allPeriods.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+            {filterPeriod!=="__latest__"&&<button onClick={()=>setFilterPeriod("__latest__")} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"6px 10px",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>✕ Quitar filtro</button>}
+          </div>}
+        </div>
+        {filterPeriod!=="__latest__"&&<div style={{background:`${A}15`,border:`1px solid ${A}44`,borderRadius:8,padding:"8px 14px",marginBottom:16,fontSize:12,color:A}}>
+          📅 Mostrando resultados del período: <strong>{filterPeriod}</strong> — los KPIs sin dato registrado en este período aparecen en blanco.
+        </div>}
         {/* Semáforos */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12,marginBottom:20}}>
           {[{c:GREEN,l:"🟢 En Meta"},{c:A,l:"🟡 En Riesgo"},{c:RED,l:"🔴 Crítico"},{c:MUTED,l:"⚪ Sin datos"}].map(s=>(
@@ -292,7 +329,7 @@ export default function BSCApp(){
               </div>
               <Bar pct={pct} color={p.color}/>
               <div style={{marginTop:10,display:"flex",gap:5,flexWrap:"wrap"}}>
-                {ks.length?ks.map((k,i)=>{const col=kpiCol(k);return<div key={i} style={{background:`${col}22`,border:`1px solid ${col}55`,borderRadius:20,padding:"2px 8px",fontSize:10,color:col}}>{k.nombre||`KPI ${i+1}`}</div>;}):
+                {ks.length?ks.map((k,i)=>{const col=kpiColAt(k,filterPeriod);return<div key={i} style={{background:`${col}22`,border:`1px solid ${col}55`,borderRadius:20,padding:"2px 8px",fontSize:10,color:col}}>{k.nombre||`KPI ${i+1}`}</div>;}):
                 <span style={{fontSize:11,color:MUTED}}>Sin KPIs · clic para agregar</span>}
               </div>
             </div>;
@@ -301,15 +338,16 @@ export default function BSCApp(){
 
         {/* Tabla resumen */}
         {kpis.length>0&&<div style={{background:CARD2,border:`1px solid ${BORDER}`,borderRadius:12,overflow:"hidden"}}>
-          <div style={{padding:"12px 16px",borderBottom:`1px solid ${BORDER}`}}><h3 style={{margin:0,color:A,fontSize:14}}>📋 Resumen General de KPIs</h3></div>
+          <div style={{padding:"12px 16px",borderBottom:`1px solid ${BORDER}`}}><h3 style={{margin:0,color:A,fontSize:14}}>📋 Resumen General de KPIs {filterPeriod!=="__latest__"?`— ${filterPeriod}`:""}</h3></div>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
               <thead><tr style={{background:"#0D1526"}}>
                 {["Est.","Indicador","Perspectiva","Responsable","Frec.","Meta","Resultado","Brecha","Tend."].map(h=><th key={h} style={{padding:"8px 10px",textAlign:"left",color:MUTED,fontFamily:"monospace",fontSize:9,borderBottom:`1px solid ${BORDER}`,whiteSpace:"nowrap"}}>{h}</th>)}
               </tr></thead>
               <tbody>{kpis.map((k,i)=>{
-                const col=kpiCol(k);
-                const act=(k.periodos||[]).filter(p=>p.valor!=="").slice(-1)[0]?.valor||"";
+                const col=kpiColAt(k,filterPeriod);
+                const periodoVal=kpiValAt(k,filterPeriod);
+                const act=periodoVal?.valor||"";
                 const br=act&&k.meta?(+k.meta - +act).toFixed(1):"—";
                 const tr=trend(k.periodos);
                 const p=PERSP.find(pp=>pp.id===k.perspectiva);
@@ -320,8 +358,8 @@ export default function BSCApp(){
                   <td style={{padding:"8px 10px",color:MUTED}}>{k.responsable||"—"}</td>
                   <td style={{padding:"8px 10px",color:MUTED}}>{k.frecuencia}</td>
                   <td style={{padding:"8px 10px",color:A,fontWeight:"bold"}}>{k.meta||"—"} {k.unidad}</td>
-                  <td style={{padding:"8px 10px",color:col,fontWeight:"bold"}}>{act||"—"}{act?` ${k.unidad}`:""}</td>
-                  <td style={{padding:"8px 10px",color:col}}>{br}</td>
+                  <td style={{padding:"8px 10px",color:act?col:MUTED,fontWeight:"bold"}}>{act||"Sin dato"}{act?` ${k.unidad}`:""}</td>
+                  <td style={{padding:"8px 10px",color:col}}>{act?br:"—"}</td>
                   <td style={{padding:"8px 10px",fontSize:14,color:tr==="↑"?GREEN:tr==="↓"?RED:A}}>{tr}</td>
                 </tr>;
               })}</tbody>
