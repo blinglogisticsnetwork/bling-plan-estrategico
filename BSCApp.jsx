@@ -271,7 +271,7 @@ export default function BSCApp(){
           <div style={{fontSize:13,fontWeight:"bold"}}>Bling Logistics Network</div>
           <div style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>CUADRO DE MANDO INTEGRAL — BSC 2026</div>
         </div>
-        <button onClick={()=>window.location.hash=""} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"6px 12px",cursor:"pointer",fontSize:11,fontFamily:"monospace"}}
+        <button onClick={()=>{if(window.__goTo)window.__goTo('plan');else window.location.hash="";}} style={{background:"transparent",border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:"6px 12px",cursor:"pointer",fontSize:11,fontFamily:"monospace"}}
           onMouseEnter={e=>e.target.style.color=A} onMouseLeave={e=>e.target.style.color=MUTED}>← Plan Estratégico</button>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
