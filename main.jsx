@@ -76,13 +76,17 @@ function LoginScreen({ onLogin }) {
   const handleLogin = async () => {
     setLoading(true)
     setError('')
-    const result = await signIn(email, password)
-    if (result.access_token) {
-      localStorage.setItem('bling_token', result.access_token)
-      localStorage.setItem('bling_user', email)
-      onLogin(result.access_token, email)
-    } else {
-      setError('Email o contraseña incorrectos')
+    try {
+      const result = await signIn(email, password)
+      if (result.access_token) {
+        localStorage.setItem('bling_token', result.access_token)
+        localStorage.setItem('bling_user', email)
+        onLogin(result.access_token, email)
+      } else {
+        setError('Email o contraseña incorrectos')
+      }
+    } catch(e) {
+      setError('Error de conexión. Intenta de nuevo.')
     }
     setLoading(false)
   }
