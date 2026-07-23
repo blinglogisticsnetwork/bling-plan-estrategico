@@ -141,9 +141,7 @@ function Router() {
     try { await signOut(token) } catch(_) {}
     localStorage.removeItem('bling_token')
     localStorage.removeItem('bling_user')
-    setToken(null)
-    setUser(null)
-    window.location.hash = ''
+    window.location.reload()
   }
 
   if (!token) return <LoginScreen onLogin={handleLogin} />
