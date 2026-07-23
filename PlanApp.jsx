@@ -934,12 +934,13 @@ export default function PlanApp(){
     setLoading(true);setData({});
     (async()=>{
       try{
-        const key=`bling_v4_${year}`;
-        const r=await window.storage.get(key);
-        if(r?.value){setData(JSON.parse(r.value));}
+        // Always try year-specific key first, then legacy
+        const yearKey=`bling_v4_${year}`;
+        const r1=await window.storage.get(yearKey);
+        if(r1?.value){setData(JSON.parse(r1.value));}
         else{
-          const legacy=await window.storage.get("bling_v4");
-          if(legacy?.value){setData(JSON.parse(legacy.value));await window.storage.set(key,legacy.value);}
+          const r2=await window.storage.get("bling_v4");
+          if(r2?.value)setData(JSON.parse(r2.value));
         }
       }catch(_){}
       setLoading(false);
@@ -948,8 +949,13 @@ export default function PlanApp(){
 
   const handleChange=(k,v)=>setData(p=>({...p,[k]:v}));
   const handleSave=async()=>{
-    const key=`bling_v4_${year}`;
-    try{await window.storage.set(key,JSON.stringify(data));setSaved(true);setTimeout(()=>setSaved(false),2500);}catch(_){}
+    const yearKey=`bling_v4_${year}`;
+    const str=JSON.stringify(data);
+    try{
+      await window.storage.set(yearKey,str);
+      await window.storage.set("bling_v4",str);
+      setSaved(true);setTimeout(()=>setSaved(false),2500);
+    }catch(_){}
   };
   const changeYear=(y)=>{localStorage.setItem('bling_year',y);setYear(y);};
 
