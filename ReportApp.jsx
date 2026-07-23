@@ -529,7 +529,7 @@ function ReportApp(){
     loadData(token).then(d=>{setData(d);setLoading(false)})
   },[])
 
-  const logout=()=>{localStorage.removeItem('bling_token');localStorage.removeItem('bling_user');window.location.href=window.location.pathname}
+  const logout=()=>{if(window.__logout)window.__logout();else{localStorage.removeItem('bling_token');localStorage.removeItem('bling_user');window.location.reload();}}
   const printAll=async(mode)=>{setPrintMode(mode);setTimeout(()=>{window.print();setTimeout(()=>setPrintMode(null),1000)},300)}
 
   // Filter KPI periods by year range
@@ -598,7 +598,7 @@ function ReportApp(){
         </div>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <a href="#" onClick={e=>{e.preventDefault();window.location.hash='';window.location.reload();}} style={{color:MUTED,fontSize:11,fontFamily:'monospace',textDecoration:'none'}}
+        <a href="#" onClick={e=>{e.preventDefault();if(window.__goTo)window.__goTo('plan');else window.location.hash='';}} style={{color:MUTED,fontSize:11,fontFamily:'monospace',textDecoration:'none'}}
           onMouseEnter={e=>e.target.style.color=A} onMouseLeave={e=>e.target.style.color=MUTED}>← Plan Estratégico</a>
         <div style={{display:'flex',alignItems:'center',gap:6,background:CARD2,border:`1px solid ${BORDER}`,borderRadius:8,padding:'6px 10px'}}>
           <span style={{fontSize:10,color:MUTED,fontFamily:'monospace'}}>📅 PERÍODO:</span>
