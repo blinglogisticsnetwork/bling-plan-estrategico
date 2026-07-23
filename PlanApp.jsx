@@ -927,11 +927,31 @@ export default function PlanApp(){
   const[data,setData]=useState({});
   const[saved,setSaved]=useState(false);
   const[loading,setLoading]=useState(true);
+  const[year,setYear]=useState(()=>+(localStorage.getItem('bling_year')||2026));
+  const YRS=[2024,2025,2026,2027,2028,2029,2030];
 
-  useEffect(()=>{(async()=>{try{const r=await window.storage.get(sKey)||(year===2026?await window.storage.get("bling_v4"):null);if(r?.value)setData(JSON.parse(r.value));else setData({});}catch(_){}setLoading(false);})();},[year]);
+  useEffect(()=>{
+    setLoading(true);setData({});
+    (async()=>{
+      try{
+        const key=`bling_v4_${year}`;
+        const r=await window.storage.get(key);
+        if(r?.value){setData(JSON.parse(r.value));}
+        else if(year===2026){
+          const legacy=await window.storage.get("bling_v4");
+          if(legacy?.value)setData(JSON.parse(legacy.value));
+        }
+      }catch(_){}
+      setLoading(false);
+    })();
+  },[year]);
 
   const handleChange=(k,v)=>setData(p=>({...p,[k]:v}));
-  const handleSave=async()=>{try{await window.storage.set("bling_v4",JSON.stringify(data));setSaved(true);setTimeout(()=>setSaved(false),2500);}catch(_){}};
+  const handleSave=async()=>{
+    const key=`bling_v4_${year}`;
+    try{await window.storage.set(key,JSON.stringify(data));setSaved(true);setTimeout(()=>setSaved(false),2500);}catch(_){}
+  };
+  const changeYear=(y)=>{localStorage.setItem('bling_year',y);setYear(y);};
 
   if(loading)return <div style={{background:DARK,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:A,fontFamily:"monospace"}}>Cargando...</div>;
 
@@ -943,7 +963,16 @@ export default function PlanApp(){
     <div style={{background:CARD,borderBottom:`1px solid ${BORDER}`,padding:"10px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{width:28,height:28,background:A,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:"bold",color:DARK,fontSize:13}}>B</div>
-        <div><div style={{fontSize:13,fontWeight:"bold"}}>Bling Logistics Network</div><div style={{display:"flex",alignItems:"center",gap:6,marginTop:2}}><span style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>PLAN ESTRATÉGICO</span><select value={year} onChange={e=>{const y=+e.target.value;localStorage.setItem("bling_year",y);setYear(y);setData({});setLoading(true);}} style={{background:A,border:"none",borderRadius:4,color:DARK,padding:"1px 6px",fontSize:10,outline:"none",cursor:"pointer",fontFamily:"monospace",fontWeight:"bold"}}>{YRS.map(y=><option key={y} value={y}>{y}</option>)}</select></div></div>      </div>
+        <div>
+          <div style={{fontSize:13,fontWeight:"bold"}}>Bling Logistics Network</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:2}}>
+            <span style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>PLAN ESTRATÉGICO</span>
+            <select value={year} onChange={e=>changeYear(+e.target.value)}
+              style={{background:A,border:"none",borderRadius:4,color:DARK,padding:"1px 6px",fontSize:10,outline:"none",cursor:"pointer",fontFamily:"monospace",fontWeight:"bold"}}>
+              {YRS.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        </div>      </div>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
           <div style={{width:100,height:5,background:"#1e3a5f",borderRadius:3}}><div style={{width:`${prog}%`,height:"100%",background:prog===100?GREEN:A,borderRadius:3,transition:"width 0.4s"}}/></div>
@@ -987,7 +1016,7 @@ export default function PlanApp(){
           {active==="mvp"&&<MVP data={data} set={handleChange}/>}
           {active==="cliente"&&<Cliente data={data} set={handleChange}/>}
           {active==="bsc"&&<BSC/>}
-          {active==="reportes"&&<div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><h2 style={{color:A,marginBottom:12}}>Reportes y PDF — {year}</h2><p style={{color:MUTED,marginBottom:24,maxWidth:400,margin:"0 auto 24px"}}>Genera el plan estratégico {year} completo en PDF.</p><div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}><div onClick={()=>{sessionStorage.setItem("rFrom",year);sessionStorage.setItem("rTo",year);window.location.hash="#report";}} style={{background:"#fff",border:"2px solid #fff",borderRadius:12,padding:"20px 28px",cursor:"pointer",minWidth:160,textAlign:"center"}} onMouseEnter={e=>e.currentTarget.style.borderColor=A} onMouseLeave={e=>e.currentTarget.style.borderColor="#fff"}><div style={{fontSize:28,marginBottom:8}}>📋</div><div style={{fontSize:13,fontWeight:"bold",color:"#1a1a1a"}}>Reporte Ejecutivo</div><div style={{fontSize:11,color:"#666",marginTop:4}}>Fondo blanco · Formal</div></div><div onClick={()=>{sessionStorage.setItem("rFrom",year);sessionStorage.setItem("rTo",year);sessionStorage.setItem("rMode","visual");window.location.hash="#report";}} style={{background:CARD2,border:`2px solid ${A}`,borderRadius:12,padding:"20px 28px",cursor:"pointer",minWidth:160,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>🎨</div><div style={{fontSize:13,fontWeight:"bold",color:A}}>Presentación Visual</div><div style={{fontSize:11,color:MUTED,marginTop:4}}>Fondo oscuro · App</div></div></div></div>}
+          {active==="reportes"&&<div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><h2 style={{color:A,marginBottom:12}}>Reportes y PDF — {year}</h2><p style={{color:MUTED,marginBottom:24,maxWidth:400,margin:"0 auto 24px"}}>Genera el plan estratégico {year} completo en PDF.</p><div style={{display:"flex",gap:14,justifyContent:"center",flexWrap:"wrap"}}><div onClick={()=>{sessionStorage.setItem("rFrom",year);sessionStorage.setItem("rTo",year);window.location.hash="#report";}} style={{background:"#fff",border:"2px solid #fff",borderRadius:12,padding:"20px 28px",cursor:"pointer",minWidth:160,textAlign:"center"}} onMouseEnter={e=>e.currentTarget.style.borderColor=A} onMouseLeave={e=>e.currentTarget.style.borderColor="#fff"}><div style={{fontSize:28,marginBottom:8}}>📋</div><div style={{fontSize:13,fontWeight:"bold",color:"#1a1a1a"}}>Reporte Ejecutivo</div><div style={{fontSize:11,color:"#666",marginTop:4}}>Fondo blanco</div></div><div onClick={()=>{sessionStorage.setItem("rFrom",year);sessionStorage.setItem("rTo",year);sessionStorage.setItem("rMode","visual");window.location.hash="#report";}} style={{background:CARD2,border:`2px solid ${A}`,borderRadius:12,padding:"20px 28px",cursor:"pointer",minWidth:160,textAlign:"center"}}><div style={{fontSize:28,marginBottom:8}}>🎨</div><div style={{fontSize:13,fontWeight:"bold",color:A}}>Presentación Visual</div><div style={{fontSize:11,color:MUTED,marginTop:4}}>Fondo oscuro</div></div></div></div>}
         </div>
       </div>
     </div>
