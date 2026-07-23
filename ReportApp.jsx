@@ -517,6 +517,11 @@ function ReportApp(){
   const[active,setActive]=useState('contexto')
   const[loading,setLoading]=useState(true)
   const[printMode,setPrintMode]=useState(null)
+  const[fromYear,setFromYear]=useState(new Date().getFullYear())
+  const[toYear,setToYear]=useState(new Date().getFullYear())
+
+  const currentYear=new Date().getFullYear()
+  const yearOptions=Array.from({length:8},(_,i)=>currentYear-2+i)
 
   useEffect(()=>{
     const token=localStorage.getItem('bling_token')
@@ -526,6 +531,19 @@ function ReportApp(){
 
   const logout=()=>{localStorage.removeItem('bling_token');localStorage.removeItem('bling_user');window.location.hash=''}
   const printAll=async(mode)=>{setPrintMode(mode);setTimeout(()=>{window.print();setTimeout(()=>setPrintMode(null),1000)},300)}
+
+  // Filter KPI periods by year range
+  const filterKpiPeriods=(kpi)=>{
+    const ps=(kpi.periodos||[]).filter(p=>{
+      if(!p.valor||!p.label)return false
+      const match=p.label.match(/\b(20\d{2})\b/)
+      if(!match)return true // include if no year detected
+      const yr=parseInt(match[1])
+      return yr>=fromYear&&yr<=toYear
+    })
+    return {...kpi,periodos:ps}
+  }
+  const filterBscKpis=(kpis)=>(kpis||[]).map(filterKpiPeriods)
 
   if(loading)return <div style={{background:DARK,minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:A,fontFamily:'monospace'}}>Cargando datos...</div>
 
@@ -551,7 +569,7 @@ function ReportApp(){
       {/* Cover page */}
       <div style={{textAlign:'center',padding:'60px 40px',background:isExec?'#f8f9fa':CARD,marginBottom:40,borderRadius:isExec?0:12}}>
         <img src={LOGO_COLOR} alt="Bling" style={{width:200,margin:'0 auto 20px',display:'block'}}/>
-        <h2 style={{fontSize:18,color:isExec?'#444':MUTED,fontWeight:'normal',marginBottom:4}}>Plan Estratégico 2026</h2>
+        <h2 style={{fontSize:18,color:isExec?'#444':MUTED,fontWeight:'normal',marginBottom:4}}>Plan Estratégico {fromYear===toYear?fromYear:`${fromYear} — ${toYear}`}</h2>
         <p style={{color:isExec?'#888':MUTED,fontSize:12}}>{new Date().toLocaleDateString('es-ES',{year:'numeric',month:'long',day:'numeric'})}</p>
       </div>
       {/* All modules */}
@@ -563,7 +581,7 @@ function ReportApp(){
             <span style={{fontSize:24}}>{mod.icon}</span>
             <h2 style={{fontSize:20,fontWeight:'bold',color:isExec?'#1a1a1a':mod.color,margin:0}}>{mod.label}</h2>
           </div>
-          <View data={data}/>
+          <View data={mod.id==='bsc'?{...data,__bsc_kpis:filterBscKpis(data.__bsc_kpis)}:data}/>
         </div>
       })}
     </div>
@@ -582,6 +600,18 @@ function ReportApp(){
       <div style={{display:'flex',alignItems:'center',gap:10}}>
         <a href="#" onClick={e=>{e.preventDefault();window.location.hash='';}} style={{color:MUTED,fontSize:11,fontFamily:'monospace',textDecoration:'none'}}
           onMouseEnter={e=>e.target.style.color=A} onMouseLeave={e=>e.target.style.color=MUTED}>← Plan Estratégico</a>
+        <div style={{display:'flex',alignItems:'center',gap:6,background:CARD2,border:`1px solid ${BORDER}`,borderRadius:8,padding:'6px 10px'}}>
+          <span style={{fontSize:10,color:MUTED,fontFamily:'monospace'}}>📅 PERÍODO:</span>
+          <select value={fromYear} onChange={e=>setFromYear(+e.target.value)}
+            style={{background:'transparent',border:'none',color:A,fontSize:12,outline:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:'bold'}}>
+            {yearOptions.map(y=><option key={y} value={y}>{y}</option>)}
+          </select>
+          <span style={{color:MUTED,fontSize:11}}>→</span>
+          <select value={toYear} onChange={e=>setToYear(+e.target.value)}
+            style={{background:'transparent',border:'none',color:A,fontSize:12,outline:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:'bold'}}>
+            {yearOptions.filter(y=>y>=fromYear).map(y=><option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
         <button onClick={()=>printAll('executive')} style={{background:'#ffffff',color:'#1a1a1a',border:'none',borderRadius:6,padding:'7px 14px',fontWeight:'bold',cursor:'pointer',fontSize:12,fontFamily:'monospace'}}>📄 Reporte Ejecutivo</button>
         <button onClick={()=>printAll('visual')} style={{background:A,color:DARK,border:'none',borderRadius:6,padding:'7px 14px',fontWeight:'bold',cursor:'pointer',fontSize:12,fontFamily:'monospace'}}>🎨 Presentación Visual</button>
         <button onClick={logout} style={{background:'transparent',border:`1px solid ${BORDER}`,color:MUTED,borderRadius:6,padding:'7px 10px',cursor:'pointer',fontSize:11}}
@@ -613,7 +643,7 @@ function ReportApp(){
             <span style={{fontSize:24}}>{MODULES.find(m=>m.id===active)?.icon}</span>
             <h2 style={{margin:0,fontSize:22,color:MODULES.find(m=>m.id===active)?.color||A}}>{MODULES.find(m=>m.id===active)?.label}</h2>
           </div>
-          {ActiveView&&<ActiveView data={data}/>}
+          {ActiveView&&<ActiveView data={active==='bsc'?{...data,__bsc_kpis:filterBscKpis(data.__bsc_kpis)}:data}/>}
         </div>
       </div>
     </div>
