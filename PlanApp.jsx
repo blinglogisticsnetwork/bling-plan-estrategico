@@ -943,7 +943,16 @@ export default function PlanApp(){
     <div style={{background:CARD,borderBottom:`1px solid ${BORDER}`,padding:"10px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <div style={{width:28,height:28,background:A,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:"bold",color:DARK,fontSize:13}}>B</div>
-        <div><div style={{fontSize:13,fontWeight:"bold"}}>Bling Logistics Network</div><div style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>PLAN ESTRATÉGICO</div></div>      </div>
+        <div>
+          <div style={{fontSize:13,fontWeight:"bold"}}>Bling Logistics Network</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:2}}>
+            <span style={{fontSize:10,color:MUTED,fontFamily:"monospace",letterSpacing:1}}>PLAN ESTRATÉGICO</span>
+            <select value={year} onChange={e=>changeYear(+e.target.value)}
+              style={{background:A,border:"none",borderRadius:4,color:DARK,padding:"1px 6px",fontSize:10,outline:"none",cursor:"pointer",fontFamily:"monospace",fontWeight:"bold"}}>
+              {yearOptions.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        </div>      </div>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
         <div style={{display:"flex",alignItems:"center",gap:6}}>
           <div style={{width:100,height:5,background:"#1e3a5f",borderRadius:3}}><div style={{width:`${prog}%`,height:"100%",background:prog===100?GREEN:A,borderRadius:3,transition:"width 0.4s"}}/></div>
@@ -987,7 +996,7 @@ export default function PlanApp(){
           {active==="mvp"&&<MVP data={data} set={handleChange}/>}
           {active==="cliente"&&<Cliente data={data} set={handleChange}/>}
           {active==="bsc"&&<BSC/>}
-          {active==="reportes"&&<div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><h2 style={{color:A,marginBottom:12}}>Reportes y PDF</h2><p style={{color:MUTED,marginBottom:24}}>Selecciona el período y genera tu plan estratégico en PDF.</p><button onClick={()=>window.location.hash="#report"} style={{background:A,color:DARK,border:"none",borderRadius:8,padding:"14px 28px",fontSize:14,fontWeight:"bold",cursor:"pointer"}}>Abrir Reportes →</button></div>}
+          {active==="reportes"&&<div style={{textAlign:"center",padding:"40px 20px"}}><div style={{fontSize:40,marginBottom:12}}>📄</div><h2 style={{color:A,marginBottom:12}}>Reportes y PDF — {year}</h2><p style={{color:MUTED,marginBottom:24,maxWidth:400,margin:"0 auto 24px"}}>Genera el plan estratégico {year} en PDF con toda la información guardada.</p><button onClick={()=>{sessionStorage.setItem("rFrom",year);sessionStorage.setItem("rTo",year);window.location.hash="#report";}} style={{background:A,color:DARK,border:"none",borderRadius:8,padding:"14px 28px",fontSize:14,fontWeight:"bold",cursor:"pointer",marginRight:12}}>📄 Reporte Ejecutivo</button><button onClick={()=>{sessionStorage.setItem("rFrom",year);sessionStorage.setItem("rTo",year);sessionStorage.setItem("rMode","visual");window.location.hash="#report";}} style={{background:CARD2,color:A,border:`2px solid ${A}`,borderRadius:8,padding:"14px 28px",fontSize:14,fontWeight:"bold",cursor:"pointer"}}>🎨 Presentación Visual</button></div>}
         </div>
       </div>
     </div>
