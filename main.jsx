@@ -138,11 +138,12 @@ function Router() {
   }
 
   const handleLogout = async () => {
-    await signOut(token)
+    try { await signOut(token) } catch(_) {}
     localStorage.removeItem('bling_token')
     localStorage.removeItem('bling_user')
     setToken(null)
     setUser(null)
+    window.location.hash = ''
   }
 
   if (!token) return <LoginScreen onLogin={handleLogin} />
@@ -150,6 +151,7 @@ function Router() {
   window.storage = makeStorage(token)
   window.__logout = handleLogout
   window.__user = user
+  window.__goTo = (page) => { window.location.hash = page === 'plan' ? '' : `#${page}` }
 
   return page === 'bsc' ? <BSCApp /> : page === 'report' ? <ReportApp /> : <PlanApp />
 }
