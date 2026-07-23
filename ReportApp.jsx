@@ -517,8 +517,8 @@ function ReportApp(){
   const[active,setActive]=useState('contexto')
   const[loading,setLoading]=useState(true)
   const[printMode,setPrintMode]=useState(null)
-  const[fromYear,setFromYear]=useState(new Date().getFullYear())
-  const[toYear,setToYear]=useState(new Date().getFullYear())
+  const[fromYear,setFromYear]=useState(+(sessionStorage.getItem('report_from')||new Date().getFullYear()))
+  const[toYear,setToYear]=useState(+(sessionStorage.getItem('report_to')||new Date().getFullYear()))
 
   const currentYear=new Date().getFullYear()
   const yearOptions=Array.from({length:8},(_,i)=>currentYear-2+i)
