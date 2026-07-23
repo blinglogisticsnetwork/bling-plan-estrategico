@@ -937,9 +937,9 @@ export default function PlanApp(){
         const key=`bling_v4_${year}`;
         const r=await window.storage.get(key);
         if(r?.value){setData(JSON.parse(r.value));}
-        else if(year===2026){
+        else{
           const legacy=await window.storage.get("bling_v4");
-          if(legacy?.value)setData(JSON.parse(legacy.value));
+          if(legacy?.value){setData(JSON.parse(legacy.value));await window.storage.set(key,legacy.value);}
         }
       }catch(_){}
       setLoading(false);
