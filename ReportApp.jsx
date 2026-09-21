@@ -653,7 +653,7 @@ function ReportApp(){
     {/* TOPBAR */}
     <div style={{background:CARD,borderBottom:`1px solid ${BORDER}`,padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',flexShrink:0}}>
       <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <img src={LOGO_WHITE} alt="Bling" style={{height:28,objectFit:'contain'}}/>
+        <img src={LOGO_B64} alt="Bling" style={{height:28,objectFit:'contain'}}/>
         <div>
           <div style={{fontSize:13,fontWeight:'bold'}}>Bling Logistics Network</div>
           <div style={{fontSize:10,color:MUTED,fontFamily:'monospace',letterSpacing:1}}>REPORTES Y DOCUMENTOS — {planYear}</div>
